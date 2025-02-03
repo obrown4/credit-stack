@@ -18,21 +18,22 @@ const indexes = new Map(
 
 chrome.runtime.onMessage.addListener((request, sender, response) => {
     console.log("Message received");
-    chrome.storage.local.set({card_name: "Finding best card..."});
     if(request.type == "NEW_PAGE" && isCheckoutPage()){
+        chrome.storage.local.set({card_name: "Finding best card..."});
         console.log("CHECKOUT_DETECTED");
         const url = window.location
         getRecommendataion(url.hostname);
         response({status: "success"});
+    }else{
+        chrome.storage.local.set({card_name: "Sleeping..."});
+        response({status: "failure"});
     }
-    response({status: "failure"});
 });
 
 
 function isCheckoutPage() {
     console.log("Checking if it's a checkout page...");
     
-     // 1. Check URL patterns first (most reliable)
      const checkoutUrlPatterns = [
         /checkout/i,
         /payment/i,
@@ -57,10 +58,9 @@ function isCheckoutPage() {
 
 function getRecommendataion(domain){
     console.log(domain);
-    let recommendation = document.getElementById("recommendation");
     if(!domain in stores){
         console.log("No store found");
-        chrome.storage.local.set({card_name: "Any card will do"});
+        chrome.storage.local.set({card_name: "Default Card"});
         return;
     }
 

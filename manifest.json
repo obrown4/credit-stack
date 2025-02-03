@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "Credit Stack",
     "version": "1.0",
-    "permissions": ["active-tab", "storage", "scripting", "tab", "notifications"],
+    "permissions": ["activeTab", "storage", "scripting"],
     
     "background": {
       "service_worker": "src/background.js"
