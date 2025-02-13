@@ -1,0 +1,128 @@
+[
+  {
+    "name": "Chase Freedom Unlimited",
+    "issuer": "Chase",
+    "rewardsCategories": [
+      {
+        "category": "Dining",
+        "rewardRate": 3,
+        "exclusions": [],
+        "rotatingCategories": []
+      },
+      {
+        "category": "Drugstores",
+        "rewardRate": 3,
+        "exclusions": [],
+        "rotatingCategories": []
+      },
+      {
+        "category": "Chase Travel",
+        "rewardRate": 5,
+        "exclusions": [],
+        "rotatingCategories": []
+      },
+      {
+        "category": "Any Purchase",
+        "rewardRate": 1.5,
+        "exclusions": [],
+        "rotatingCategories": []
+      }
+    ]
+  },
+  {
+    "name": "Chase Saphire Preferred",
+    "issuer": "Chase",
+    "rewardsCategories": [
+      {
+        "category": "Dining",
+        "rewardRate": 3,
+        "exclusions": [],
+        "rotatingCategories": []
+      },
+      {
+        "category": "Chase Travel",
+        "rewardRate": 5,
+        "exclusions": [],
+        "rotatingCategories": []
+      },
+      {
+        "category": "Travel",
+        "rewardRate": 2,
+        "exclusions": [],
+        "rotatingCategories": []
+      },
+      {
+        "category": "Streaming",
+        "rewardRate": 3,
+        "exclusions": [],
+        "rotatingCategories": []
+      },
+      {
+        "category": "Groceries",
+        "rewardRate": 3,
+        "exclusions": ["Walamrt", "Target"],
+        "rotatingCategories": []
+      },
+      {
+        "category": "Any Purchase",
+        "rewardRate": 1,
+        "exclusions": [],
+        "rotatingCategories": []
+      }
+    ]
+  },
+  {
+    "name": "Capital One SavorOne",
+    "issuer": "Capital One",
+    "rewardsCategories": [
+      {
+        "category": "Dining",
+        "rewardRate": 3,
+        "exclusions": [],
+        "rotatingCategories": []
+      },
+      {
+        "category": "Groceries",
+        "rewardRate": 3,
+        "exclusions": [],
+        "rotatingCategories": []
+      },
+      {
+        "category": "Entertainment",
+        "rewardRate": 3,
+        "exclusions": [],
+        "rotatingCategories": []
+      },
+      {
+        "category": "Streaming",
+        "rewardRate": 3,
+        "exclusions": [],
+        "rotatingCategories": []
+      },
+      {
+        "category": "Any Purchase",
+        "rewardRate": 1,
+        "exclusions": [],
+        "rotatingCategories": []
+      }
+    ]
+  },
+  {
+    "name": "Discover It",
+    "issuer": "Discover",
+    "rewardsCategories": [
+      {
+        "category": "Rotational",
+        "rewardRate": 5,
+        "exclusions": [],
+        "rotatingCategories": ["Dining"]
+      },
+      {
+        "category": "Any Purchase",
+        "rewardRate": 1,
+        "exclusions": [],
+        "rotatingCategories": []
+      }
+    ]
+  }
+]
