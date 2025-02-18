@@ -27,6 +27,11 @@ type CreditCard struct {
 	RewardsCategories []RewardsCategory `json:"rewardsCategories"`
 }
 
+type DomainCategory struct {
+	Domain   string `json:"domain"`
+	Category string `json:"category"`
+}
+
 func main() {
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
 	opts := options.Client().ApplyURI(env.GetConnectionString()).SetServerAPIOptions(serverAPI)
@@ -44,9 +49,50 @@ func main() {
 		}
 	}()
 
-	collection := client.Database("rewardsDB").Collection("creditCards")
+	cardsCollection := client.Database("rewardsDB").Collection("creditCards")
+	storesCollection := client.Database("rewardsDB").Collection("domainCategories")
 
-	addCards(collection)
+	addCards(cardsCollection)
+	addStores(storesCollection)
+}
+
+func addStores(col *mongo.Collection) {
+	var domains []DomainCategory
+
+	data, err := os.ReadFile("domains.json")
+	if err != nil {
+		fmt.Printf("Error reading file: %s\n", err)
+		return
+	}
+	err = json.Unmarshal(data, &domains)
+	if err != nil {
+		fmt.Printf("Error parsing file: %s\n", err)
+		return
+	}
+
+	for _, domain := range domains {
+		filter := bson.M{"name": domain.Domain}
+
+		// Create update document
+		update := bson.M{"$set": domain}
+
+		// Set upsert option to true
+		opts := options.Update().SetUpsert(true)
+
+		// Perform upsert
+		_, err := col.UpdateOne(
+			context.TODO(),
+			filter,
+			update,
+			opts,
+		)
+
+		if err != nil {
+			log.Printf("%s\n", err)
+			return
+		}
+	}
+
 }
 
 func addCards(col *mongo.Collection) {
