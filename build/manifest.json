@@ -1,0 +1,10 @@
+{
+    "manifest_version": 3,
+    "name": "Credit Stack",
+    "version": "1.0.0",
+    "description": "Tool to maximize your credit rewards",
+    "action": {
+      "default_popup": "index.html"
+    },
+    "permissions": []
+  }
