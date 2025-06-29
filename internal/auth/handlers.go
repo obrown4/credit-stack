@@ -1,4 +1,4 @@
-package handlers
+package auth
 
 import (
 	"fmt"
@@ -18,3 +18,9 @@ func PrintMsg(w http.ResponseWriter, r *http.Request) {
 	msg := r.FormValue("msg")
 	fmt.Println("Message:", msg)
 }
+
+func Register(w http.ResponseWriter, r *http.Request) {}
+
+func Login(w http.ResponseWriter, r *http.Request) {}
+
+func Logout(w http.ResponseWriter, r *http.Request) {}

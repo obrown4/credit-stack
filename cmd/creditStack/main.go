@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/joho/godotenv"
+	"github.com/obrown4/credit-stack/api"
 	"github.com/obrown4/credit-stack/internal/db"
-	"github.com/obrown4/credit-stack/internal/handlers"
 )
 
 func main() {
@@ -21,8 +21,8 @@ func main() {
 	}
 	log.Printf("Connected to the database successfully")
 
-	// set up handlers
-	http.HandleFunc("/print", handlers.PrintMsg)
+	s := api.NewServer()
+	api.SetRoutes(&s)
 
 	// start network server
 	http.ListenAndServe(":8080", nil)
