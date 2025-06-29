@@ -19,7 +19,16 @@ func PrintMsg(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Message:", msg)
 }
 
-func Register(w http.ResponseWriter, r *http.Request) {}
+func Register(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Respond with JSON
+	msg := r.FormValue("msg")
+	fmt.Println("Message:", msg)
+}
 
 func Login(w http.ResponseWriter, r *http.Request) {}
 

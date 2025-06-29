@@ -25,5 +25,5 @@ func main() {
 	api.SetRoutes(&s)
 
 	// start network server
-	http.ListenAndServe(":8080", nil)
+	http.ListenAndServe(":8080", &s)
 }
