@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 
@@ -19,6 +20,8 @@ func main() {
 	if err := db.Connect(); err != nil {
 		log.Fatalf("Failed to connect to the database: %v", err)
 	}
+
+	defer db.Client.Disconnect(context.TODO())
 	log.Printf("Connected to the database successfully")
 
 	s := api.NewServer()
