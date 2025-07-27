@@ -133,15 +133,15 @@ func LoginUser(ctx context.Context, client *db.Client, username, password string
 }
 
 // AuthorizeUser validates a user's session
-func AuthorizeUser(ctx context.Context, client *db.Client, username, sessionToken, csrfToken string) (string, error) {
+func AuthorizeUser(ctx context.Context, client *db.Client, username, sessionToken, csrfToken string) error {
 	if username == "" || sessionToken == "" || csrfToken == "" {
-		return "", fmt.Errorf("username, sessionToken, and csrfToken are required")
+		return fmt.Errorf("username, sessionToken, and csrfToken are required")
 	}
 
 	// Check if user exists
 	_, err := getUser(ctx, client, username)
 	if err != nil {
-		return "", fmt.Errorf("failed to get user: %w", err)
+		return fmt.Errorf("failed to get user: %w", err)
 	}
 
 	// Validate session
@@ -154,16 +154,16 @@ func AuthorizeUser(ctx context.Context, client *db.Client, username, sessionToke
 	})
 
 	if sessionResult.Err() != nil {
-		return "", fmt.Errorf("invalid or expired session")
+		return fmt.Errorf("invalid or expired session")
 	}
 
 	var session Session
 	err = sessionResult.Decode(&session)
 	if err != nil {
-		return "", fmt.Errorf("failed to decode session: %w", err)
+		return fmt.Errorf("failed to decode session: %w", err)
 	}
 
-	return session.Username, nil
+	return nil
 }
 
 // LogoutUser handles the business logic for user logout

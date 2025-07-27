@@ -52,6 +52,7 @@ func setRoutes(ctx context.Context, r *http.ServeMux, client *db.Client) {
 	handleLogin(ctx, r, client)
 	handleLogout(ctx, r, client)
 	handleRegister(ctx, r, client)
+	handleProtectedEndpoint(ctx, r, client)
 	// service routes
 }
 
@@ -194,6 +195,47 @@ func handleLogout(ctx context.Context, r *http.ServeMux, client *db.Client) {
 		response := map[string]string{
 			"status":  "success",
 			"message": "Logged out successfully",
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(response)
+	})
+}
+
+func handleProtectedEndpoint(ctx context.Context, r *http.ServeMux, client *db.Client) {
+	r.HandleFunc("POST /protected", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		username := r.FormValue("username")
+		if username == "" {
+			http.Error(w, "Username is required", http.StatusBadRequest)
+			return
+		}
+
+		sessionCookie, err := r.Cookie("session_token")
+		if err != nil {
+			http.Error(w, "No session found", http.StatusUnauthorized)
+			return
+		}
+
+		csrf := r.Header.Get("X-CSRF-Token")
+		if csrf == "" {
+			http.Error(w, "CSRF token is required", http.StatusBadRequest)
+			return
+		}
+
+		err = auth.AuthorizeUser(ctx, client, username, sessionCookie.Value, csrf)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+
+		response := map[string]string{
+			"status":  "success",
+			"message": "Protected endpoint accessed successfully",
 		}
 
 		w.Header().Set("Content-Type", "application/json")
