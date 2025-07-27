@@ -21,21 +21,26 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	// connect to db
-	if err := db.Connect(ctx); err != nil {
+	// create and connect to database
+	dbClient, err := db.NewClient(ctx)
+	if err != nil {
 		log.Fatalf("Failed to connect to the database: %v", err)
 	}
-	defer db.Disconnect(ctx)
+	defer func() {
+		if err := dbClient.Close(ctx); err != nil {
+			log.Printf("Failed to close database connection: %v", err)
+		}
+	}()
 
-	log.Printf("Connected to the database successfully")
-
-	s := api.NewServer(ctx, ":8080")
+	s := api.NewServer(ctx, ":8080", dbClient)
 	var eg errgroup.Group
 
 	// start network server
 	eg.Go(func() error {
 		return s.Run()
 	})
+
+	log.Printf("Server started on port 8080")
 
 	<-ctx.Done()
 
