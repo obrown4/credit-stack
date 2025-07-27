@@ -22,11 +22,11 @@ func main() {
 	}
 
 	// connect to db
-	if err := db.Connect(); err != nil {
+	if err := db.Connect(ctx); err != nil {
 		log.Fatalf("Failed to connect to the database: %v", err)
 	}
+	defer db.Disconnect(ctx)
 
-	defer db.Client.Disconnect(context.TODO())
 	log.Printf("Connected to the database successfully")
 
 	s := api.NewServer(ctx, ":8080")

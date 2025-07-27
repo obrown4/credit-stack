@@ -11,7 +11,7 @@ import (
 
 var Client *mongo.Client
 
-func Connect() error {
+func Connect(ctx context.Context) error {
 
 	uri := os.Getenv("MONGODB_URI")
 
@@ -26,13 +26,21 @@ func Connect() error {
 	}
 
 	defer func() {
-		if err = Client.Disconnect(context.TODO()); err != nil {
+		if err = Client.Disconnect(ctx); err != nil {
 			panic(err)
 		}
 	}()
 
 	// Send a ping to confirm a successful connection
 	if err := Client.Database("admin").RunCommand(context.TODO(), bson.D{{"ping", 1}}).Err(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func Disconnect(ctx context.Context) error {
+	if err := Client.Disconnect(ctx); err != nil {
 		return err
 	}
 
