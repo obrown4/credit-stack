@@ -174,7 +174,7 @@ func LogoutUser(ctx context.Context, client *db.Client, username, sessionToken s
 
 	// Remove session from database
 	sessions := client.Collection("creditStack", "sessions")
-	_, err := sessions.DeleteOne(ctx, bson.D{
+	_, err := sessions.DeleteMany(ctx, bson.D{
 		{Key: "username", Value: username},
 		{Key: "session_token", Value: sessionToken},
 	})
