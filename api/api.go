@@ -20,9 +20,12 @@ func NewServer(ctx context.Context, addr string, client *db.Client) *Server {
 	router := http.NewServeMux()
 	setRoutes(ctx, router, client)
 
+	// Wrap the router with CORS middleware
+	handler := corsMiddleware(router)
+
 	server := &http.Server{
 		Addr:    addr,
-		Handler: router,
+		Handler: handler,
 	}
 
 	return &Server{
@@ -30,6 +33,25 @@ func NewServer(ctx context.Context, addr string, client *db.Client) *Server {
 		addr:   addr,
 		client: client,
 	}
+}
+
+// CORS middleware to handle cross-origin requests
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Set CORS headers
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-CSRF-Token")
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+
+		// Handle preflight requests
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
 
 func (s *Server) Run() error {

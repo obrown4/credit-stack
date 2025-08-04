@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Credit Stack",
+  "version": "1.0.0",
+  "description": "A Chrome extension for credit management",
+  "permissions": [
+    "activeTab"
+  ],
+  "action": {
+    "default_popup": "index.html",
+    "default_title": "Credit Stack"
+  }
+}
