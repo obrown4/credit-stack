@@ -1,0 +1,20 @@
+{
+    "manifest_version": 3,
+    "name": "Credit Stack",
+    "version": "1.0",
+    "description": "Chrome extenison to optimzie credit card rewards",
+    "action": {
+      "default_popup": "index.html"
+    },
+    "permissions": [
+      "activeTab",
+      "scripting"
+    ],
+    "host_permissions": [
+      "https://*/*",
+      "http://*/*"
+    ],
+    "icons": {
+      "16": "credit_icon.png"
+    }
+  }
