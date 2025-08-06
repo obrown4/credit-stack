@@ -225,15 +225,9 @@ func handleLogout(ctx context.Context, r *http.ServeMux, client *db.Client) {
 }
 
 func handleProtectedEndpoint(ctx context.Context, r *http.ServeMux, client *db.Client) {
-	r.HandleFunc("POST /protected", func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc("POST /auth", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
-
-		username := r.FormValue("username")
-		if username == "" {
-			http.Error(w, "Username is required", http.StatusBadRequest)
 			return
 		}
 
@@ -249,7 +243,7 @@ func handleProtectedEndpoint(ctx context.Context, r *http.ServeMux, client *db.C
 			return
 		}
 
-		err = auth.AuthorizeUser(ctx, client, username, sessionCookie.Value, csrf)
+		err = auth.AuthorizeUser(ctx, client, sessionCookie.Value, csrf)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return

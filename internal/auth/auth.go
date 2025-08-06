@@ -133,21 +133,13 @@ func LoginUser(ctx context.Context, client *db.Client, username, password string
 }
 
 // AuthorizeUser validates a user's session
-func AuthorizeUser(ctx context.Context, client *db.Client, username, sessionToken, csrfToken string) error {
-	if username == "" || sessionToken == "" || csrfToken == "" {
-		return fmt.Errorf("username, sessionToken, and csrfToken are required")
+func AuthorizeUser(ctx context.Context, client *db.Client, sessionToken, csrfToken string) error {
+	if sessionToken == "" || csrfToken == "" {
+		return fmt.Errorf("sessionToken and csrfToken are required")
 	}
-
-	// Check if user exists
-	_, err := getUser(ctx, client, username)
-	if err != nil {
-		return fmt.Errorf("failed to get user: %w", err)
-	}
-
 	// Validate session
 	sessions := client.Collection("creditStack", "sessions")
 	sessionResult := sessions.FindOne(ctx, bson.D{
-		{Key: "username", Value: username},
 		{Key: "session_token", Value: sessionToken},
 		{Key: "csrf_token", Value: csrfToken},
 		{Key: "expires_at", Value: bson.M{"$gt": time.Now()}},
@@ -158,7 +150,7 @@ func AuthorizeUser(ctx context.Context, client *db.Client, username, sessionToke
 	}
 
 	var session Session
-	err = sessionResult.Decode(&session)
+	err := sessionResult.Decode(&session)
 	if err != nil {
 		return fmt.Errorf("failed to decode session: %w", err)
 	}
