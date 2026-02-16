@@ -32,7 +32,7 @@ func main() {
 		}
 	}()
 
-	s := api.NewServer(ctx, ":8080", dbClient)
+	s := api.NewServer(ctx, os.Getenv("PORT"), dbClient)
 	var eg errgroup.Group
 
 	// start network server

@@ -133,6 +133,7 @@ func LoginUser(ctx context.Context, client *db.Client, username, password string
 }
 
 // AuthorizeUser validates a user's session
+// Not convinced this checks correctly
 func AuthorizeUser(ctx context.Context, client *db.Client, sessionToken, csrfToken string) error {
 	if sessionToken == "" || csrfToken == "" {
 		return fmt.Errorf("sessionToken and csrfToken are required")
