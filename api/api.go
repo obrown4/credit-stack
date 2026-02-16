@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"net/http"
 	"time"
 
@@ -17,12 +18,16 @@ type Server struct {
 }
 
 func NewServer(ctx context.Context, addr string, client *db.Client) *Server {
-	router := http.NewServeMux()
-	setRoutes(ctx, router, client)
+	pubMux := http.NewServeMux()
+	privMux := http.NewServeMux()
+	setRoutes(ctx, pubMux, privMux, client)
 
 	server := &http.Server{
-		Addr: addr,
+		Addr:    addr,
+		Handler: pubMux,
 	}
+
+	log.Printf("Server started on %s\n", addr)
 
 	return &Server{
 		server: server,
@@ -45,14 +50,43 @@ func (s *Server) Close() error {
 	return s.server.Shutdown(ctx)
 }
 
-func setRoutes(ctx context.Context, r *http.ServeMux, client *db.Client) {
+func setRoutes(ctx context.Context, pubMux *http.ServeMux, privMux *http.ServeMux, client *db.Client) {
 	// auth API routes
-	handlePrintMsg(ctx, r)
-	handleLogin(ctx, r, client)
-	handleLogout(ctx, r, client)
-	handleRegister(ctx, r, client)
-	handleProtectedEndpoint(ctx, r, client)
-	// service routes
+	handleLogin(ctx, pubMux, client)
+	handleRegister(ctx, pubMux, client)
+
+	// protected routes
+	handleLogout(ctx, privMux, client)
+	handlePrintMsg(ctx, privMux)
+
+	pubMux.Handle("/", validateSession(ctx, client, privMux))
+}
+
+func validateSession(ctx context.Context, client *db.Client, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		sessionCookie, err := r.Cookie("session_token")
+		if err != nil {
+			http.Error(w, "No session found", http.StatusUnauthorized)
+			return
+		}
+
+		csrf, err := r.Cookie("csrf_token")
+		if err != nil || csrf.Value == "" {
+			http.Error(w, "CSRF token is required", http.StatusBadRequest)
+			return
+		}
+
+		err = auth.AuthorizeUser(ctx, client, sessionCookie.Value, csrf.Value)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+
+		log.Printf("Session validated\n")
+
+		// validated, now proceed
+		next.ServeHTTP(w, r)
+	})
 }
 
 // HTTP handlers - handle all HTTP concerns

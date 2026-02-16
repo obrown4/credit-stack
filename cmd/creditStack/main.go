@@ -40,8 +40,6 @@ func main() {
 		return s.Run()
 	})
 
-	log.Printf("Server started on port 8080")
-
 	<-ctx.Done()
 
 	if err := s.Close(); err != nil {
