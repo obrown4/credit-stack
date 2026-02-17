@@ -79,6 +79,7 @@ func validateSession(ctx context.Context, client *db.Client, next http.Handler) 
 		err = auth.AuthorizeUser(ctx, client, sessionCookie.Value, csrf.Value)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
+			log.Printf("Session validation failed: %s\n", err.Error())
 			return
 		}
 
@@ -160,14 +161,14 @@ func handleLogin(ctx context.Context, r *http.ServeMux, client *db.Client) {
 		http.SetCookie(w, &http.Cookie{
 			Name:     "session_token",
 			Value:    result.SessionToken,
-			Expires:  time.Now().Add(24 * time.Hour),
+			Expires:  result.ExpiresAt,
 			HttpOnly: true,
 		})
 
 		http.SetCookie(w, &http.Cookie{
 			Name:     "csrf_token",
 			Value:    result.CSRFToken,
-			Expires:  time.Now().Add(24 * time.Hour),
+			Expires:  result.ExpiresAt,
 			HttpOnly: false,
 		})
 
@@ -228,41 +229,6 @@ func handleLogout(ctx context.Context, r *http.ServeMux, client *db.Client) {
 		response := map[string]string{
 			"status":  "success",
 			"message": "Logged out successfully",
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(response)
-	})
-}
-
-func handleProtectedEndpoint(ctx context.Context, r *http.ServeMux, client *db.Client) {
-	r.HandleFunc("POST /auth", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
-
-		sessionCookie, err := r.Cookie("session_token")
-		if err != nil {
-			http.Error(w, "No session found", http.StatusUnauthorized)
-			return
-		}
-
-		csrf := r.Header.Get("X-CSRF-Token")
-		if csrf == "" {
-			http.Error(w, "CSRF token is required", http.StatusBadRequest)
-			return
-		}
-
-		err = auth.AuthorizeUser(ctx, client, sessionCookie.Value, csrf)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
-			return
-		}
-
-		response := map[string]string{
-			"status":  "success",
-			"message": "Protected endpoint accessed successfully",
 		}
 
 		w.Header().Set("Content-Type", "application/json")

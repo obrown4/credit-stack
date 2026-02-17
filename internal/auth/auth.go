@@ -31,6 +31,7 @@ type LoginResult struct {
 	SessionToken string
 	CSRFToken    string
 	Username     string
+	ExpiresAt    time.Time
 }
 
 // RegisterUser handles the business logic for user registration
@@ -154,6 +155,16 @@ func AuthorizeUser(ctx context.Context, client *db.Client, sessionToken, csrfTok
 	err := sessionResult.Decode(&session)
 	if err != nil {
 		return fmt.Errorf("failed to decode session: %w", err)
+	}
+
+	if session.ExpiresAt.Before(time.Now()) {
+		sessions.DeleteOne(ctx, sessionResult)
+		return fmt.Errorf("session expired")
+	}
+
+	if session.SessionToken != sessionToken || session.CSRFToken != csrfToken {
+		sessions.DeleteOne(ctx, sessionResult)
+		return fmt.Errorf("invalid session")
 	}
 
 	return nil
