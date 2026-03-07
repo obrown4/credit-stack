@@ -105,6 +105,11 @@ func LoginUser(ctx context.Context, client *db.Client, username, password string
 		return nil, fmt.Errorf("invalid password")
 	}
 
+	if validSesson(ctx, client, username) {
+		log.Printf("User %s is already logged in", username)
+		return nil, nil
+	}
+
 	// Generate tokens
 	sessionToken := utils.GenerateToken(32)
 	csrfToken := utils.GenerateToken(32)
@@ -205,6 +210,20 @@ func getUser(ctx context.Context, client *db.Client, username string) (*User, er
 		return nil, fmt.Errorf("failed to decode user: %w", err)
 	}
 	return &user, nil
+}
+
+func validSesson(ctx context.Context, client *db.Client, username string) bool {
+	sessions := client.Collection("creditStack", "sessions")
+	sessionResult := sessions.FindOne(ctx, bson.D{
+		{Key: "username", Value: username},
+		{Key: "expires_at", Value: bson.M{"$gt": time.Now()}},
+	})
+
+	if sessionResult.Err() != nil {
+		return false
+	}
+
+	return true
 }
 
 // PrintMessage handles the business logic for printing messages

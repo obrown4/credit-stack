@@ -157,6 +157,19 @@ func handleLogin(ctx context.Context, r *http.ServeMux, client *db.Client) {
 			return
 		}
 
+		response := map[string]string{
+			"status":  "success",
+			"message": "Login successful",
+			"user":    username,
+		}
+
+		if result == nil {
+			response["message"] = "Already logged in"
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+
 		// Set cookies (HTTP concern handled in API layer)
 		http.SetCookie(w, &http.Cookie{
 			Name:     "session_token",
@@ -171,12 +184,6 @@ func handleLogin(ctx context.Context, r *http.ServeMux, client *db.Client) {
 			Expires:  result.ExpiresAt,
 			HttpOnly: false,
 		})
-
-		response := map[string]string{
-			"status":  "success",
-			"message": "Login successful",
-			"user":    result.Username,
-		}
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(response)
