@@ -176,7 +176,7 @@ func AuthorizeUser(ctx context.Context, client *db.Client, sessionToken, csrfTok
 }
 
 // LogoutUser handles the business logic for user logout
-func LogoutUser(ctx context.Context, client *db.Client, username, sessionToken string) error {
+func LogoutUser(ctx context.Context, client *db.Client, username, sessionToken string, csrf string) error {
 	if username == "" || sessionToken == "" {
 		return fmt.Errorf("username and sessionToken are required")
 	}
@@ -186,6 +186,7 @@ func LogoutUser(ctx context.Context, client *db.Client, username, sessionToken s
 	_, err := sessions.DeleteMany(ctx, bson.D{
 		{Key: "username", Value: username},
 		{Key: "session_token", Value: sessionToken},
+		{Key: "csrf_token", Value: csrf},
 	})
 
 	if err != nil {
@@ -193,6 +194,24 @@ func LogoutUser(ctx context.Context, client *db.Client, username, sessionToken s
 	}
 
 	log.Printf("User logged out successfully")
+	return nil
+}
+
+func DeleteUser(ctx context.Context, client *db.Client, username string) error {
+	if username == "" {
+		return fmt.Errorf("username is required")
+	}
+
+	users := client.Collection("creditStack", "users")
+	_, err := users.DeleteOne(ctx, bson.D{{Key: "username", Value: username}})
+	if err != nil {
+		return fmt.Errorf("failed to delete user: %w", err)
+	}
+
+	// todo
+	// delete any data conneceted to user
+
+	log.Printf("User %s deleted successfully", username)
 	return nil
 }
 

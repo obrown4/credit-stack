@@ -17,6 +17,13 @@ type Server struct {
 	client *db.Client
 }
 
+type Request struct {
+	username     string
+	password     string
+	sessionToken string
+	csrfToken    string
+}
+
 func NewServer(ctx context.Context, addr string, client *db.Client) *Server {
 	pubMux := http.NewServeMux()
 	privMux := http.NewServeMux()
@@ -57,6 +64,7 @@ func setRoutes(ctx context.Context, pubMux *http.ServeMux, privMux *http.ServeMu
 
 	// protected routes
 	handleLogout(ctx, privMux, client)
+	handleDeleteUser(ctx, privMux, client)
 	handlePrintMsg(ctx, privMux)
 
 	pubMux.Handle("/", validateSession(ctx, client, privMux))
@@ -114,11 +122,13 @@ func handleRegister(ctx context.Context, r *http.ServeMux, client *db.Client) {
 			return
 		}
 
-		username := r.FormValue("username")
-		password := r.FormValue("password")
+		form := &Request{
+			username: r.FormValue("username"),
+			password: r.FormValue("password"),
+		}
 
 		// Call business logic (validation happens inside)
-		err := auth.RegisterUser(ctx, client, username, password)
+		err := auth.RegisterUser(ctx, client, form.username, form.password)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -141,17 +151,13 @@ func handleLogin(ctx context.Context, r *http.ServeMux, client *db.Client) {
 			return
 		}
 
-		// Parse form data
-		if err := r.ParseForm(); err != nil {
-			http.Error(w, "Failed to parse form data", http.StatusBadRequest)
-			return
+		form := &Request{
+			username: r.FormValue("username"),
+			password: r.FormValue("password"),
 		}
 
-		username := r.FormValue("username")
-		password := r.FormValue("password")
-
 		// Call business logic
-		result, err := auth.LoginUser(ctx, client, username, password)
+		result, err := auth.LoginUser(ctx, client, form.username, form.password)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -160,7 +166,7 @@ func handleLogin(ctx context.Context, r *http.ServeMux, client *db.Client) {
 		response := map[string]string{
 			"status":  "success",
 			"message": "Login successful",
-			"user":    username,
+			"user":    form.username,
 		}
 
 		if result == nil {
@@ -197,22 +203,14 @@ func handleLogout(ctx context.Context, r *http.ServeMux, client *db.Client) {
 			return
 		}
 
-		// Get session token from cookie
-		sessionCookie, err := r.Cookie("session_token")
-		if err != nil {
-			http.Error(w, "No session found", http.StatusUnauthorized)
-			return
-		}
-
-		// Get username from request (you might want to get this from the session instead)
-		username := r.FormValue("username")
-		if username == "" {
-			http.Error(w, "Username is required", http.StatusBadRequest)
-			return
+		form := &Request{
+			username:     r.FormValue("username"),
+			sessionToken: r.FormValue("session_token"),
+			csrfToken:    r.FormValue("csrf_token"),
 		}
 
 		// Call business logic
-		err = auth.LogoutUser(ctx, client, username, sessionCookie.Value)
+		err := auth.LogoutUser(ctx, client, form.username, form.sessionToken, form.csrfToken)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -237,6 +235,50 @@ func handleLogout(ctx context.Context, r *http.ServeMux, client *db.Client) {
 			"status":  "success",
 			"message": "Logged out successfully",
 		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(response)
+	})
+}
+
+func handleDeleteUser(ctx context.Context, r *http.ServeMux, client *db.Client) {
+	r.HandleFunc("POST /delete", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		form := &Request{
+			username:     r.FormValue("username"),
+			sessionToken: r.FormValue("session_token"),
+			csrfToken:    r.FormValue("csrf_token"),
+		}
+
+		err := auth.DeleteUser(ctx, client, form.username)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		response := map[string]string{
+			"status":  "success",
+			"message": "User deleted successfully",
+		}
+
+		// Clear cookies
+		http.SetCookie(w, &http.Cookie{
+			Name:     "session_token",
+			Value:    "",
+			Expires:  time.Now().Add(-1 * time.Hour),
+			HttpOnly: true,
+		})
+
+		http.SetCookie(w, &http.Cookie{
+			Name:     "csrf_token",
+			Value:    "",
+			Expires:  time.Now().Add(-1 * time.Hour),
+			HttpOnly: false,
+		})
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(response)
