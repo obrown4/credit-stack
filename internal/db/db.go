@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -40,7 +41,10 @@ func NewClient(ctx context.Context) (*Client, error) {
 	}
 
 	log.Printf("Successfully connected to MongoDB")
-	return &Client{client: client}, nil
+	c := &Client{client: client}
+	go sessionSweep(ctx, c)
+
+	return c, nil
 }
 
 // GetClient returns the underlying MongoDB client
@@ -78,4 +82,27 @@ func IsPresent(collection *mongo.Collection, filter interface{}) (bool, error) {
 	}
 
 	return true, nil
+}
+
+func sessionSweep(ctx context.Context, client *Client) {
+	ticker := time.NewTicker(24 * time.Hour)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			sessions := client.Collection("creditStack", "sessions")
+			_, err := sessions.DeleteMany(ctx, bson.D{
+				{Key: "expires_at", Value: bson.M{"$lt": time.Now()}},
+			})
+			if err != nil {
+				log.Printf("Failed to sweep expired sessions: %v", err)
+			} else {
+				log.Printf("Expired sessions swept successfully")
+			}
+		case <-ctx.Done():
+			log.Printf("Session Sweeper stopped")
+			return
+		}
+	}
 }

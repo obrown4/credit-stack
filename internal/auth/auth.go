@@ -129,7 +129,7 @@ func LoginUser(ctx context.Context, client *db.Client, username, password string
 		return nil, fmt.Errorf("failed to store session: %w", err)
 	}
 
-	log.Printf("User logged in successfully")
+	log.Printf("User %s: logged in successfully", username)
 
 	return &LoginResult{
 		SessionToken: sessionToken,
