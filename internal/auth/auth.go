@@ -105,7 +105,7 @@ func LoginUser(ctx context.Context, client *db.Client, username, password string
 		return nil, fmt.Errorf("invalid password")
 	}
 
-	if validSesson(ctx, client, username) {
+	if validSession(ctx, client, username) {
 		log.Printf("User %s is already logged in", username)
 		return nil, nil
 	}
@@ -231,7 +231,7 @@ func getUser(ctx context.Context, client *db.Client, username string) (*User, er
 	return &user, nil
 }
 
-func validSesson(ctx context.Context, client *db.Client, username string) bool {
+func validSession(ctx context.Context, client *db.Client, username string) bool {
 	sessions := client.Collection("creditStack", "sessions")
 	sessionResult := sessions.FindOne(ctx, bson.D{
 		{Key: "username", Value: username},
